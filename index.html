@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>放置ポイント</title>
+</head>
+<body>
+  <h1>放置ポイントゲーム</h1>
+  <p>ポイント: <span id="pt">0</span></p>
+
+  <script>
+    const uidKey = "bg_uid";
+    let uid = localStorage.getItem(uidKey);
+    if (!uid) {
+      uid = crypto.randomUUID();
+      localStorage.setItem(uidKey, uid);
+    }
+
+    async function tick() {
+      const res = await fetch(
+        "https://YOUR-WORKER.workers.dev/add",
+        {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ uid })
+        }
+      );
+      const data = await res.json();
+      document.getElementById("pt").textContent = data.point;
+    }
+
+    setInterval(tick, 30000); // 30秒ごと
+    tick(); // 初回取得
+  </script>
+</body>
+</html>
