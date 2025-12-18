@@ -3,34 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <title>放置ポイント</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+    .pt {
+      font-size: 2em;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
   <h1>放置ポイントゲーム</h1>
-  <p>ポイント: <span id="pt">0</span></p>
+  <div class="pt">
+    <span id="point">0</span> pt
+  </div>
+  <p>1分ごとに +100pt</p>
 
   <script>
-    const uidKey = "bg_uid";
-    let uid = localStorage.getItem(uidKey);
-    if (!uid) {
-      uid = crypto.randomUUID();
-      localStorage.setItem(uidKey, uid);
+    const COOKIE_NAME = "bg_point";
+    const INTERVAL = 60 * 1000; // 1分
+    const ADD_POINT = 100;
+
+    function getPoint() {
+      const match = document.cookie.match(/bg_point=(\d+)/);
+      return match ? Number(match[1]) : 0;
     }
 
-    async function tick() {
-      const res = await fetch(
-        "https://YOUR-WORKER.workers.dev/add",
-        {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({ uid })
-        }
-      );
-      const data = await res.json();
-      document.getElementById("pt").textContent = data.point;
+    function setPoint(pt) {
+      document.cookie =
+        `${COOKIE_NAME}=${pt}; max-age=31536000; path=/`;
     }
 
-    setInterval(tick, 30000); // 30秒ごと
-    tick(); // 初回取得
+    let point = getPoint();
+    const el = document.getElementById("point");
+    el.textContent = point;
+
+    setInterval(() => {
+      point += ADD_POINT;
+      el.textContent = point;
+      setPoint(point);
+    }, INTERVAL);
+
+    // 念のためタブを閉じた瞬間にも保存
+    window.addEventListener("beforeunload", () => {
+      setPoint(point);
+    });
   </script>
 </body>
 </html>
