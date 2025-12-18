@@ -14,53 +14,79 @@
       font-weight: bold;
     }
     .level {
-      margin-top: 10px;
+      margin-top: 5px;
       font-size: 1.2em;
     }
-    .ach {
+    .boost {
       margin-top: 20px;
+    }
+    button {
+      font-size: 1em;
+      padding: 10px 20px;
+    }
+    .info {
+      margin-top: 10px;
+      color: #555;
+    }
+    .ach {
+      margin-top: 15px;
       color: green;
     }
   </style>
 </head>
 <body>
   <h1>放置ポイントゲーム</h1>
+
   <div class="pt"><span id="pt">0</span> pt</div>
   <div class="level">Lv.<span id="lv">1</span></div>
+
+  <div class="boost">
+    <button id="boostBtn">🚀 1.5倍ブースト（10000pt）</button>
+    <div class="info" id="boostInfo">未使用</div>
+  </div>
+
   <div class="ach" id="ach"></div>
 
   <script>
     /* ===== 設定 ===== */
-    const RATE = 100; // 1秒あたり100pt
-    const KEY_POINT = "bg_point";
-    const KEY_TIME = "bg_last";
-    const KEY_ACH = "bg_ach";
+    const BASE_RATE = 100;           // 1秒100pt
+    const BOOST_RATE = 1.5;
+    const BOOST_COST = 10000;
+    const BOOST_TIME = 30 * 1000;    // 30秒
+
+    const KEY_P = "bg_point";
+    const KEY_T = "bg_last";
+    const KEY_B = "bg_boost_until";
+    const KEY_A = "bg_ach";
 
     /* ===== 読み込み ===== */
-    let point = Number(localStorage.getItem(KEY_POINT)) || 0;
-    let last = Number(localStorage.getItem(KEY_TIME)) || Date.now();
-    let achievements = JSON.parse(localStorage.getItem(KEY_ACH) || "[]");
+    let point = Number(localStorage.getItem(KEY_P)) || 0;
+    let last = Number(localStorage.getItem(KEY_T)) || Date.now();
+    let boostUntil = Number(localStorage.getItem(KEY_B)) || 0;
+    let achievements = JSON.parse(localStorage.getItem(KEY_A) || "[]");
 
-    /* ===== 閉じてた時間分を加算 ===== */
+    /* ===== 閉じてた時間分加算 ===== */
     const now = Date.now();
     const diffSec = (now - last) / 1000;
-    point += Math.floor(diffSec * RATE);
+    point += Math.floor(diffSec * BASE_RATE);
 
-    /* ===== 表示要素 ===== */
+    /* ===== 要素 ===== */
     const ptEl = document.getElementById("pt");
     const lvEl = document.getElementById("lv");
     const achEl = document.getElementById("ach");
+    const boostBtn = document.getElementById("boostBtn");
+    const boostInfo = document.getElementById("boostInfo");
 
-    /* ===== レベル計算 ===== */
+    /* ===== レベル ===== */
     function getLevel(pt) {
       return Math.floor(Math.sqrt(pt / 100)) + 1;
     }
 
     /* ===== 実績 ===== */
     const ACH_LIST = [
-      { id: "1000", pt: 1000, text: "🎉 1000pt達成！" },
-      { id: "10000", pt: 10000, text: "🔥 10000pt達成！" },
-      { id: "100k", pt: 100000, text: "👑 100000pt達成！" }
+      { id: "1k", pt: 1000, text: "🎉 1000pt達成" },
+      { id: "10k", pt: 10000, text: "🔥 10000pt達成" },
+      { id: "100k", pt: 100000, text: "👑 100000pt達成" }
     ];
 
     function checkAchievements() {
@@ -70,35 +96,66 @@
           achEl.textContent = a.text;
         }
       }
-      localStorage.setItem(KEY_ACH, JSON.stringify(achievements));
+      localStorage.setItem(KEY_A, JSON.stringify(achievements));
     }
 
-    /* ===== なめらか加算（ミリ秒） ===== */
+    /* ===== ブースト処理 ===== */
+    function isBoost() {
+      return Date.now() < boostUntil;
+    }
+
+    boostBtn.onclick = () => {
+      if (isBoost()) return;
+      if (point < BOOST_COST) {
+        alert("ポイントが足りません");
+        return;
+      }
+      point -= BOOST_COST;
+      boostUntil = Date.now() + BOOST_TIME;
+      localStorage.setItem(KEY_B, boostUntil);
+    };
+
+    /* ===== 表示更新 ===== */
+    function updateBoostUI() {
+      if (isBoost()) {
+        const remain = Math.ceil((boostUntil - Date.now()) / 1000);
+        boostInfo.textContent = `🚀 ブースト中（残り ${remain}s）`;
+        boostBtn.disabled = true;
+      } else {
+        boostInfo.textContent = "未使用";
+        boostBtn.disabled = false;
+      }
+    }
+
+    /* ===== メインループ（ミリ秒） ===== */
     let lastFrame = performance.now();
     function loop(nowMs) {
       const delta = (nowMs - lastFrame) / 1000;
       lastFrame = nowMs;
 
-      point += delta * RATE;
+      const rate = BASE_RATE * (isBoost() ? BOOST_RATE : 1);
+      point += delta * rate;
+
       ptEl.textContent = Math.floor(point);
       lvEl.textContent = getLevel(point);
 
+      updateBoostUI();
       checkAchievements();
       requestAnimationFrame(loop);
     }
 
     /* ===== 保存 ===== */
     function save() {
-      localStorage.setItem(KEY_POINT, Math.floor(point));
-      localStorage.setItem(KEY_TIME, Date.now());
+      localStorage.setItem(KEY_P, Math.floor(point));
+      localStorage.setItem(KEY_T, Date.now());
     }
-
     window.addEventListener("beforeunload", save);
     setInterval(save, 5000);
 
     /* ===== 初期表示 ===== */
     ptEl.textContent = Math.floor(point);
     lvEl.textContent = getLevel(point);
+    updateBoostUI();
     requestAnimationFrame(loop);
   </script>
 </body>
