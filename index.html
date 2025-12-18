@@ -48,13 +48,35 @@ main{
   flex:1;
   padding:20px;
   overflow:auto;
+  position:relative;
 }
+
+/* ===== HUD ===== */
+.hud{
+  position:fixed;
+  top:12px;
+  right:16px;
+  background:#ffffffee;
+  backdrop-filter:blur(6px);
+  border-radius:12px;
+  padding:10px 14px;
+  box-shadow:0 6px 18px #0002;
+  font-size:.85em;
+  z-index:100;
+  animation:slide .4s ease;
+}
+@keyframes slide{
+  from{opacity:0;transform:translateY(-10px)}
+  to{opacity:1;transform:none}
+}
+.hud b{font-size:1.1em}
+
+/* ===== タブ ===== */
 .tab{
   display:none;
   animation:fade .35s ease;
 }
 .tab.active{display:block}
-
 @keyframes fade{
   from{opacity:0;transform:translateX(20px)}
   to{opacity:1;transform:none}
@@ -70,6 +92,7 @@ main{
 }
 .pt{font-size:3em;font-weight:800;text-align:center}
 .center{text-align:center}
+
 .shopbtn{
   width:100%;
   padding:14px;
@@ -83,11 +106,17 @@ main{
 .shopbtn:hover{background:#e0e5ff;transform:scale(1.02)}
 .shopbtn:disabled{opacity:.4}
 
-/* ===== 小 ===== */
 .small{font-size:.85em;color:#555}
 </style>
 </head>
 <body>
+
+<!-- ===== HUD ===== -->
+<div class="hud">
+  💰 <b><span id="hudPt">0</span></b> pt<br>
+  Lv.<span id="hudLv">1</span> /
+  <span id="hudMul">1.00</span>x
+</div>
 
 <aside>
   <button class="tabbtn active" onclick="openTab('home',this)">
@@ -118,19 +147,15 @@ main{
   <div id="shop" class="tab">
     <div class="card">
       <h3>🛒 ショップ</h3>
-
       <button class="shopbtn" onclick="buyBoost(1.5,30,10000)">
         🚀 1.5倍（30秒）<br>10,000pt
       </button>
-
       <button class="shopbtn" onclick="buyBoost(2,15,25000)">
         ⚡ 2倍（15秒）<br>25,000pt
       </button>
-
       <button class="shopbtn" onclick="buyPerm(1.2,50000)">
         ⏫ 常時+20%<br>50,000pt
       </button>
-
       <button class="shopbtn" onclick="buyPerm(1.5,200000)">
         💎 常時+50%<br>200,000pt
       </button>
@@ -161,6 +186,10 @@ const lvEl=document.getElementById("lv");
 const mulEl=document.getElementById("mul");
 const boostEl=document.getElementById("boost");
 const achList=document.getElementById("achList");
+
+const hudPt=document.getElementById("hudPt");
+const hudLv=document.getElementById("hudLv");
+const hudMul=document.getElementById("hudMul");
 
 /* ===== 設定 ===== */
 const BASE=100;
@@ -198,12 +227,19 @@ function loop(t){
   const inc=d*BASE*permMul*active;
   point+=inc;total+=inc;
 
-  ptEl.textContent=Math.floor(point);
-  lvEl.textContent=level(point);
+  const p=Math.floor(point);
+  const lv=level(point);
+
+  ptEl.textContent=p;
+  lvEl.textContent=lv;
   mulEl.textContent=permMul.toFixed(2);
   boostEl.textContent=active>1
     ? active+"x ("+Math.ceil((boostUntil-Date.now())/1000)+"s)"
     : "なし";
+
+  hudPt.textContent=p;
+  hudLv.textContent=lv;
+  hudMul.textContent=(permMul*active).toFixed(2);
 
   achList.innerHTML="";
   if(total>=10000) achList.innerHTML+="🎉 10,000pt達成<br>";
