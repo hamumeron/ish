@@ -2,130 +2,166 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>放置ポイント</title>
+<title>放置ポイントDX</title>
 <style>
-body{font-family:system-ui;text-align:center;padding:30px}
-.pt{font-size:3em;font-weight:bold}
-.shop button{margin:6px;padding:8px 14px}
-.bar{width:80%;height:14px;background:#ddd;margin:10px auto;border-radius:7px;overflow:hidden}
-.bar>div{height:100%;background:#4caf50;width:0%}
-.small{color:#666;font-size:.9em}
+body{font-family:system-ui;background:#f5f6fa;text-align:center;padding:20px}
+.card{background:#fff;border-radius:12px;padding:16px;margin:12px auto;max-width:420px;box-shadow:0 4px 14px #0001}
+.pt{font-size:3em;font-weight:800}
+button{padding:10px 14px;margin:6px;border:0;border-radius:8px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+.shop button{width:90%}
+.stat{font-size:.9em;color:#555}
+.bar{width:90%;height:14px;background:#ddd;border-radius:7px;margin:8px auto;overflow:hidden}
+.bar>div{height:100%;background:linear-gradient(90deg,#4caf50,#81c784)}
+.small{font-size:.8em;color:#666}
+.ok{color:#2e7d32}
+.warn{color:#c62828}
 </style>
 </head>
 <body>
 
-<h1>放置ポイント</h1>
+<div class="card">
+<h1>放置ポイントDX</h1>
 <div class="pt"><span id="pt">0</span>pt</div>
 <div>Lv.<span id="lv">1</span></div>
 <div class="bar"><div id="bar"></div></div>
 <div class="small">次Lvまで <span id="next">0</span>pt</div>
-
-<h2>ショップ</h2>
-<div class="shop">
-<button onclick="buyBoost(1.5,30000,10000)">🚀1.5倍(30秒)</button>
-<button onclick="buyBoost(2,15000,25000)">⚡2倍(15秒)</button><br>
-<button onclick="buyPerm(1.2,50000)">⏫常時+20%</button>
-<button onclick="buyPerm(1.5,200000)">💎常時+50%</button><br>
-<button onclick="daily()">🎁デイリー</button>
 </div>
 
-<p id="info"></p>
+<div class="card">
+<h2>📈 ステータス</h2>
+<div class="stat">基本：100 pt/sec</div>
+<div class="stat">常時倍率：<span id="perm">1.00</span>x</div>
+<div class="stat">ブースト：<span id="boost">なし</span></div>
+<div class="stat">総獲得pt：<span id="total">0</span></div>
+</div>
+
+<div class="card shop">
+<h2>🛒 ショップ</h2>
+
+<button id="b15" onclick="buyBoost(1.5,30000,10000)">
+🚀 1.5倍（30秒）<br><b>10,000pt</b>
+</button>
+
+<button id="b2" onclick="buyBoost(2,15000,25000)">
+⚡ 2倍（15秒）<br><b>25,000pt</b>
+</button>
+
+<button onclick="buyPerm(1.2,50000)">
+⏫ 常時 +20%<br><b>50,000pt</b>
+</button>
+
+<button onclick="buyPerm(1.5,200000)">
+💎 常時 +50%<br><b>200,000pt</b>
+</button>
+
+<button onclick="daily()">🎁 デイリー（+5,000pt）</button>
+</div>
+
+<div class="card">
+<h2>🔄 転生</h2>
+<p class="small">Lv10以上で可能</p>
+<button onclick="rebirth()">✨ 転生（常時倍率+10%）</button>
+</div>
+
+<div class="card">
+<h2>🏆 実績</h2>
+<div id="ach"></div>
+</div>
+
+<p id="info" class="small"></p>
 
 <script>
 /* ===== DOM ===== */
-const ptEl = document.getElementById("pt");
-const lvEl = document.getElementById("lv");
-const barEl = document.getElementById("bar");
-const nextEl = document.getElementById("next");
-const infoEl = document.getElementById("info");
+const ptEl=pt,lvEl=lv,barEl=bar,nextEl=next;
+const permEl=perm,boostEl=boost,totalEl=total,infoEl=info,achEl=ach;
 
 /* ===== 設定 ===== */
-const BASE = 100;
-const KEY = {
-  p:"p", t:"t", b:"b", m:"m", d:"d"
-};
+const BASE=100;
+const K={p:"p",t:"t",b:"b",m:"m",d:"d",tot:"tot",rb:"rb"};
+let point=+localStorage.getItem(K.p)||0;
+let total=+localStorage.getItem(K.tot)||point;
+let last=+localStorage.getItem(K.t)||Date.now();
+let boostUntil=+localStorage.getItem(K.b)||0;
+let permMul=+localStorage.getItem(K.m)||1;
+let dailyLast=+localStorage.getItem(K.d)||0;
+let rebirthCount=+localStorage.getItem(K.rb)||0;
+let boostMul=1;
 
-let point = Number(localStorage.getItem(KEY.p)) || 0;
-let lastTime = Number(localStorage.getItem(KEY.t)) || Date.now();
-let boostUntil = Number(localStorage.getItem(KEY.b)) || 0;
-let permMul = Number(localStorage.getItem(KEY.m)) || 1;
-let dailyLast = Number(localStorage.getItem(KEY.d)) || 0;
-let boostMul = 1;
-
-/* ===== オフライン加算 ===== */
-const offlineSec = Math.floor((Date.now() - lastTime) / 1000);
-point += offlineSec * BASE;
+/* ===== オフライン ===== */
+point+=Math.floor((Date.now()-last)/1000)*BASE;
 
 /* ===== レベル ===== */
-const level = p => Math.floor(Math.sqrt(p / 200)) + 1;
-const need = lv => lv * lv * 200;
+const level=p=>Math.floor(Math.sqrt(p/200))+1;
+const need=l=>l*l*200;
 
-/* ===== UI更新 ===== */
+/* ===== UI ===== */
 function updateUI(){
-  ptEl.textContent = Math.floor(point);
-  const lv = level(point);
-  lvEl.textContent = lv;
+ ptEl.textContent=Math.floor(point);
+ totalEl.textContent=Math.floor(total);
+ const lv=level(point);
+ lvEl.textContent=lv;
+ const rem=need(lv+1)-point;
+ nextEl.textContent=Math.max(0,Math.floor(rem));
+ barEl.style.width=Math.min(100,(1-rem/need(lv+1))*100)+"%";
+ permEl.textContent=permMul.toFixed(2);
+ boostEl.textContent=Date.now()<boostUntil
+ ? boostMul+"x ("+Math.ceil((boostUntil-Date.now())/1000)+"s)"
+ : "なし";
 
-  const remain = need(lv + 1) - point;
-  nextEl.textContent = Math.max(0, Math.floor(remain));
+ document.getElementById("b15").disabled=point<10000||Date.now()<boostUntil;
+ document.getElementById("b2").disabled=point<25000||Date.now()<boostUntil;
 
-  const percent = Math.min(100, (1 - remain / need(lv + 1)) * 100);
-  barEl.style.width = percent + "%";
+ achEl.innerHTML="";
+ if(total>=100000) achEl.innerHTML+="🏅 10万pt達成<br>";
+ if(permMul>=2) achEl.innerHTML+="💠 常時倍率2倍<br>";
+ if(rebirthCount>0) achEl.innerHTML+="✨ 転生済み";
 }
 
 /* ===== レート ===== */
-function currentRate(){
-  let r = BASE * permMul;
-  if (Date.now() < boostUntil) r *= boostMul;
-  return r;
-}
+const rate=()=>BASE*permMul*(Date.now()<boostUntil?boostMul:1);
 
 /* ===== 購入 ===== */
-function buyBoost(mul, time, cost){
-  if (point < cost || Date.now() < boostUntil) return;
-  point -= cost;
-  boostMul = mul;
-  boostUntil = Date.now() + time;
+function buyBoost(m,t,c){
+ if(point<c||Date.now()<boostUntil)return;
+ point-=c;boostMul=m;boostUntil=Date.now()+t;
 }
-
-function buyPerm(mul, cost){
-  if (point < cost) return;
-  point -= cost;
-  permMul *= mul;
-  localStorage.setItem(KEY.m, permMul);
+function buyPerm(m,c){
+ if(point<c)return;
+ point-=c;permMul*=m;
+ localStorage.setItem(K.m,permMul);
 }
-
-/* ===== デイリー ===== */
 function daily(){
-  const now = Date.now();
-  if (now - dailyLast < 86400000){
-    infoEl.textContent = "今日は受取済み";
-    return;
-  }
-  point += 5000;
-  dailyLast = now;
-  localStorage.setItem(KEY.d, now);
-  infoEl.textContent = "デイリー +5000pt";
+ if(Date.now()-dailyLast<864e5){infoEl.textContent="今日は受取済み";return;}
+ point+=5000;dailyLast=Date.now();
+ localStorage.setItem(K.d,dailyLast);
+}
+function rebirth(){
+ if(level(point)<10)return;
+ point=0;
+ permMul*=1.1;
+ rebirthCount++;
+ localStorage.setItem(K.m,permMul);
+ localStorage.setItem(K.rb,rebirthCount);
 }
 
-/* ===== メインループ（ミリ秒計算） ===== */
-let lastFrame = performance.now();
-function loop(now){
-  const delta = (now - lastFrame) / 1000;
-  lastFrame = now;
-
-  point += delta * currentRate();
-  updateUI();
-  requestAnimationFrame(loop);
+/* ===== メイン ===== */
+let lastF=performance.now();
+function loop(n){
+ const d=(n-lastF)/1000;lastF=n;
+ const inc=d*rate();
+ point+=inc;total+=inc;
+ updateUI();requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
 /* ===== 保存 ===== */
 setInterval(()=>{
-  localStorage.setItem(KEY.p, Math.floor(point));
-  localStorage.setItem(KEY.t, Date.now());
-  localStorage.setItem(KEY.b, boostUntil);
-}, 5000);
+ localStorage.setItem(K.p,Math.floor(point));
+ localStorage.setItem(K.tot,Math.floor(total));
+ localStorage.setItem(K.t,Date.now());
+ localStorage.setItem(K.b,boostUntil);
+},5000);
 
 updateUI();
 </script>
