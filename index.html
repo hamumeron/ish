@@ -2,136 +2,210 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>放置ポイントDX</title>
+<title>Google>Google>
 <style>
-body{font-family:system-ui;background:#f4f6fa;margin:0}
-nav{display:flex;background:#222}
-nav button{flex:1;padding:14px;border:0;color:#fff;background:#222}
-nav button.active{background:#4caf50}
-.tab{display:none;padding:20px}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui;
+  background:#eef1f6;
+  display:flex;
+  height:100vh;
+}
+
+/* ===== サイドバー ===== */
+aside{
+  width:90px;
+  background:#1e1e2f;
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+  gap:10px;
+}
+.tabbtn{
+  background:#2a2a40;
+  border:none;
+  color:#fff;
+  border-radius:14px;
+  padding:14px 8px;
+  cursor:pointer;
+  transition:.25s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  font-size:.75em;
+}
+.tabbtn span{font-size:1.4em}
+.tabbtn:hover{transform:translateY(-2px);background:#3a3a5e}
+.tabbtn.active{
+  background:linear-gradient(135deg,#4caf50,#81c784);
+  box-shadow:0 0 14px #4caf50aa;
+}
+
+/* ===== メイン ===== */
+main{
+  flex:1;
+  padding:20px;
+  overflow:auto;
+}
+.tab{
+  display:none;
+  animation:fade .35s ease;
+}
 .tab.active{display:block}
-.card{background:#fff;border-radius:12px;padding:16px;margin:12px auto;max-width:420px;box-shadow:0 4px 14px #0001}
+
+@keyframes fade{
+  from{opacity:0;transform:translateX(20px)}
+  to{opacity:1;transform:none}
+}
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:18px;
+  margin:14px auto;
+  max-width:420px;
+  box-shadow:0 6px 20px #0001;
+}
 .pt{font-size:3em;font-weight:800;text-align:center}
-button.shop{width:100%;padding:12px;margin:6px 0;border:0;border-radius:8px}
-button:disabled{opacity:.4}
+.center{text-align:center}
+.shopbtn{
+  width:100%;
+  padding:14px;
+  margin:8px 0;
+  border:none;
+  border-radius:10px;
+  background:#f1f3f9;
+  cursor:pointer;
+  transition:.2s;
+}
+.shopbtn:hover{background:#e0e5ff;transform:scale(1.02)}
+.shopbtn:disabled{opacity:.4}
+
+/* ===== 小 ===== */
 .small{font-size:.85em;color:#555}
 </style>
 </head>
 <body>
 
-<nav>
-  <button onclick="openTab('home')" class="active">🏠 ホーム</button>
-  <button onclick="openTab('shop')">🛒 ショップ</button>
-  <button onclick="openTab('ach')">🏆 実績</button>
-</nav>
+<aside>
+  <button class="tabbtn active" onclick="openTab('home',this)">
+    <span>🏠</span>ホーム
+  </button>
+  <button class="tabbtn" onclick="openTab('shop',this)">
+    <span>🛒</span>ショップ
+  </button>
+  <button class="tabbtn" onclick="openTab('ach',this)">
+    <span>🏆</span>実績
+  </button>
+</aside>
 
-<div id="home" class="tab active">
-  <div class="card">
-    <div class="pt"><span id="pt">0</span> pt</div>
-    <div style="text-align:center">Lv.<span id="lv">1</span></div>
-    <div class="small" style="text-align:center">
-      倍率：<span id="mul">1.00</span>x /
-      ブースト：<span id="boost">なし</span>
+<main>
+  <!-- ホーム -->
+  <div id="home" class="tab active">
+    <div class="card">
+      <div class="pt"><span id="pt">0</span> pt</div>
+      <div class="center">Lv.<span id="lv">1</span></div>
+      <div class="center small">
+        倍率 <span id="mul">1.00</span>x /
+        ブースト <span id="boost">なし</span>
+      </div>
     </div>
   </div>
-</div>
 
-<div id="shop" class="tab">
-  <div class="card">
-    <h3>🛒 ショップ</h3>
+  <!-- ショップ -->
+  <div id="shop" class="tab">
+    <div class="card">
+      <h3>🛒 ショップ</h3>
 
-    <button class="shop" onclick="buyBoost(1.5,30,10000)">
-      🚀 1.5倍（30秒）<br>10,000pt
-    </button>
+      <button class="shopbtn" onclick="buyBoost(1.5,30,10000)">
+        🚀 1.5倍（30秒）<br>10,000pt
+      </button>
 
-    <button class="shop" onclick="buyBoost(2,15,25000)">
-      ⚡ 2倍（15秒）<br>25,000pt
-    </button>
+      <button class="shopbtn" onclick="buyBoost(2,15,25000)">
+        ⚡ 2倍（15秒）<br>25,000pt
+      </button>
 
-    <button class="shop" onclick="buyPerm(1.2,50000)">
-      ⏫ 常時+20%<br>50,000pt
-    </button>
+      <button class="shopbtn" onclick="buyPerm(1.2,50000)">
+        ⏫ 常時+20%<br>50,000pt
+      </button>
 
-    <button class="shop" onclick="buyPerm(1.5,200000)">
-      💎 常時+50%<br>200,000pt
-    </button>
+      <button class="shopbtn" onclick="buyPerm(1.5,200000)">
+        💎 常時+50%<br>200,000pt
+      </button>
+    </div>
   </div>
-</div>
 
-<div id="ach" class="tab">
-  <div class="card">
-    <h3>🏆 実績</h3>
-    <div id="achList"></div>
+  <!-- 実績 -->
+  <div id="ach" class="tab">
+    <div class="card">
+      <h3>🏆 実績</h3>
+      <div id="achList"></div>
+    </div>
   </div>
-</div>
+</main>
 
 <script>
 /* ===== タブ ===== */
-function openTab(id){
+function openTab(id,btn){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
   document.getElementById(id).classList.add("active");
-  event.target.classList.add("active");
+  btn.classList.add("active");
 }
 
 /* ===== DOM ===== */
-const ptEl = document.getElementById("pt");
-const lvEl = document.getElementById("lv");
-const mulEl = document.getElementById("mul");
-const boostEl = document.getElementById("boost");
-const achList = document.getElementById("achList");
+const ptEl=document.getElementById("pt");
+const lvEl=document.getElementById("lv");
+const mulEl=document.getElementById("mul");
+const boostEl=document.getElementById("boost");
+const achList=document.getElementById("achList");
 
 /* ===== 設定 ===== */
-const BASE = 100; // 1秒100pt
-const KEY = {
-  pt:"pt", last:"last", perm:"perm", boost:"boost", until:"until", total:"total"
-};
+const BASE=100;
+const K={pt:"pt",last:"last",perm:"perm",boost:"boost",until:"until",total:"total"};
 
-/* ===== 読み込み ===== */
-let point = Number(localStorage.getItem(KEY.pt)) || 0;
-let total = Number(localStorage.getItem(KEY.total)) || point;
-let permMul = Number(localStorage.getItem(KEY.perm)) || 1;
-let boostMul = Number(localStorage.getItem(KEY.boost)) || 1;
-let boostUntil = Number(localStorage.getItem(KEY.until)) || 0;
-let last = Number(localStorage.getItem(KEY.last)) || Date.now();
+/* ===== 読込 ===== */
+let point=+localStorage.getItem(K.pt)||0;
+let total=+localStorage.getItem(K.total)||point;
+let permMul=+localStorage.getItem(K.perm)||1;
+let boostMul=+localStorage.getItem(K.boost)||1;
+let boostUntil=+localStorage.getItem(K.until)||0;
+let last=+localStorage.getItem(K.last)||Date.now();
 
 /* ===== オフライン加算 ===== */
-const now = Date.now();
-point += Math.floor((now - last)/1000) * BASE;
+point+=Math.floor((Date.now()-last)/1000)*BASE;
 
 /* ===== レベル ===== */
-const level = p => Math.floor(Math.sqrt(p/200))+1;
+const level=p=>Math.floor(Math.sqrt(p/200))+1;
 
 /* ===== 購入 ===== */
-function buyBoost(m,sec,cost){
-  if(point<cost || Date.now()<boostUntil) return;
-  point -= cost;
-  boostMul = m;
-  boostUntil = Date.now() + sec*1000;
+function buyBoost(m,s,c){
+  if(point<c||Date.now()<boostUntil)return;
+  point-=c;boostMul=m;boostUntil=Date.now()+s*1000;
 }
-function buyPerm(m,cost){
-  if(point<cost) return;
-  point -= cost;
-  permMul *= m;
+function buyPerm(m,c){
+  if(point<c)return;
+  point-=c;permMul*=m;
 }
 
-/* ===== メインループ ===== */
-let prev = performance.now();
+/* ===== ループ ===== */
+let prev=performance.now();
 function loop(t){
-  const d = (t-prev)/1000; prev=t;
-  const activeBoost = Date.now()<boostUntil ? boostMul : 1;
-  const inc = d * BASE * permMul * activeBoost;
-  point += inc;
-  total += inc;
+  const d=(t-prev)/1000;prev=t;
+  const active=Date.now()<boostUntil?boostMul:1;
+  const inc=d*BASE*permMul*active;
+  point+=inc;total+=inc;
 
-  ptEl.textContent = Math.floor(point);
-  lvEl.textContent = level(point);
-  mulEl.textContent = permMul.toFixed(2);
-  boostEl.textContent = activeBoost>1
-    ? activeBoost+"x ("+Math.ceil((boostUntil-Date.now())/1000)+"s)"
+  ptEl.textContent=Math.floor(point);
+  lvEl.textContent=level(point);
+  mulEl.textContent=permMul.toFixed(2);
+  boostEl.textContent=active>1
+    ? active+"x ("+Math.ceil((boostUntil-Date.now())/1000)+"s)"
     : "なし";
 
-  achList.innerHTML = "";
+  achList.innerHTML="";
   if(total>=10000) achList.innerHTML+="🎉 10,000pt達成<br>";
   if(permMul>=2) achList.innerHTML+="💎 常時2倍以上<br>";
 
@@ -141,12 +215,12 @@ requestAnimationFrame(loop);
 
 /* ===== 保存 ===== */
 setInterval(()=>{
-  localStorage.setItem(KEY.pt,Math.floor(point));
-  localStorage.setItem(KEY.total,Math.floor(total));
-  localStorage.setItem(KEY.perm,permMul);
-  localStorage.setItem(KEY.boost,boostMul);
-  localStorage.setItem(KEY.until,boostUntil);
-  localStorage.setItem(KEY.last,Date.now());
+  localStorage.setItem(K.pt,Math.floor(point));
+  localStorage.setItem(K.total,Math.floor(total));
+  localStorage.setItem(K.perm,permMul);
+  localStorage.setItem(K.boost,boostMul);
+  localStorage.setItem(K.until,boostUntil);
+  localStorage.setItem(K.last,Date.now());
 },5000);
 </script>
 </body>
