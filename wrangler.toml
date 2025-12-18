@@ -1,7 +1,0 @@
-name = "bg-point-game"
-main = "worker.js"
-compatibility_date = "2025-12-18"
-
-kv_namespaces = [
-  { binding = "POINTS", id = "あなたのKV_ID" }
-]
