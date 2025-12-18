@@ -8,7 +8,7 @@ body{font-family:system-ui;text-align:center;padding:30px}
 .pt{font-size:3em;font-weight:bold}
 .shop button{margin:6px;padding:8px 14px}
 .bar{width:80%;height:14px;background:#ddd;margin:10px auto;border-radius:7px;overflow:hidden}
-.bar>div{height:100%;background:#4caf50}
+.bar>div{height:100%;background:#4caf50;width:0%}
 .small{color:#666;font-size:.9em}
 </style>
 </head>
@@ -32,72 +32,102 @@ body{font-family:system-ui;text-align:center;padding:30px}
 <p id="info"></p>
 
 <script>
+/* ===== DOM ===== */
+const ptEl = document.getElementById("pt");
+const lvEl = document.getElementById("lv");
+const barEl = document.getElementById("bar");
+const nextEl = document.getElementById("next");
+const infoEl = document.getElementById("info");
+
 /* ===== 設定 ===== */
 const BASE = 100;
-const K={p:"p",t:"t",b:"b",m:"m",d:"d"};
-let p=+localStorage.getItem(K.p)||0;
-let last=+localStorage.getItem(K.t)||Date.now();
-let boostUntil=+localStorage.getItem(K.b)||0;
-let perm=+localStorage.getItem(K.m)||1;
-let dailyLast=+localStorage.getItem(K.d)||0;
+const KEY = {
+  p:"p", t:"t", b:"b", m:"m", d:"d"
+};
 
-/* 閉じてた分 */
-p+=Math.floor((Date.now()-last)/1000)*BASE;
+let point = Number(localStorage.getItem(KEY.p)) || 0;
+let lastTime = Number(localStorage.getItem(KEY.t)) || Date.now();
+let boostUntil = Number(localStorage.getItem(KEY.b)) || 0;
+let permMul = Number(localStorage.getItem(KEY.m)) || 1;
+let dailyLast = Number(localStorage.getItem(KEY.d)) || 0;
+let boostMul = 1;
 
-/* レベル */
-const lvl=pt=>Math.floor(Math.sqrt(pt/200))+1;
-const need=lv=>lv*lv*200;
+/* ===== オフライン加算 ===== */
+const offlineSec = Math.floor((Date.now() - lastTime) / 1000);
+point += offlineSec * BASE;
 
-/* UI */
-const ptEl=pt,lvEl=lv,bar=bar,next=next,info=info;
-function ui(){
- ptEl.textContent=Math.floor(p);
- const l=lvl(p); lvEl.textContent=l;
- const n=need(l+1)-p; next.textContent=Math.max(0,Math.floor(n));
- bar.style.width=Math.min(100,(1-n/need(l+1))*100)+"%";
+/* ===== レベル ===== */
+const level = p => Math.floor(Math.sqrt(p / 200)) + 1;
+const need = lv => lv * lv * 200;
+
+/* ===== UI更新 ===== */
+function updateUI(){
+  ptEl.textContent = Math.floor(point);
+  const lv = level(point);
+  lvEl.textContent = lv;
+
+  const remain = need(lv + 1) - point;
+  nextEl.textContent = Math.max(0, Math.floor(remain));
+
+  const percent = Math.min(100, (1 - remain / need(lv + 1)) * 100);
+  barEl.style.width = percent + "%";
 }
 
-/* ブースト */
-function rate(){
- let r=BASE*perm;
- if(Date.now()<boostUntil) r*=boostMul;
- return r;
-}
-let boostMul=1;
-function buyBoost(mul,time,cost){
- if(p<cost||Date.now()<boostUntil)return;
- p-=cost; boostMul=mul; boostUntil=Date.now()+time;
+/* ===== レート ===== */
+function currentRate(){
+  let r = BASE * permMul;
+  if (Date.now() < boostUntil) r *= boostMul;
+  return r;
 }
 
-/* 永続 */
-function buyPerm(mul,cost){
- if(p<cost)return;
- p-=cost; perm*=mul;
- localStorage.setItem(K.m,perm);
+/* ===== 購入 ===== */
+function buyBoost(mul, time, cost){
+  if (point < cost || Date.now() < boostUntil) return;
+  point -= cost;
+  boostMul = mul;
+  boostUntil = Date.now() + time;
 }
 
-/* デイリー */
+function buyPerm(mul, cost){
+  if (point < cost) return;
+  point -= cost;
+  permMul *= mul;
+  localStorage.setItem(KEY.m, permMul);
+}
+
+/* ===== デイリー ===== */
 function daily(){
- const now=Date.now();
- if(now-dailyLast<86400000){info.textContent="今日はもう受取済み";return;}
- p+=5000; dailyLast=now; localStorage.setItem(K.d,now);
+  const now = Date.now();
+  if (now - dailyLast < 86400000){
+    infoEl.textContent = "今日は受取済み";
+    return;
+  }
+  point += 5000;
+  dailyLast = now;
+  localStorage.setItem(KEY.d, now);
+  infoEl.textContent = "デイリー +5000pt";
 }
 
-/* ループ */
-let lf=performance.now();
-function loop(n){
- const d=(n-lf)/1000; lf=n;
- p+=d*rate();
- ui(); requestAnimationFrame(loop);
+/* ===== メインループ（ミリ秒計算） ===== */
+let lastFrame = performance.now();
+function loop(now){
+  const delta = (now - lastFrame) / 1000;
+  lastFrame = now;
+
+  point += delta * currentRate();
+  updateUI();
+  requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
-/* 保存 */
+/* ===== 保存 ===== */
 setInterval(()=>{
- localStorage.setItem(K.p,Math.floor(p));
- localStorage.setItem(K.t,Date.now());
- localStorage.setItem(K.b,boostUntil);
-},5000);
+  localStorage.setItem(KEY.p, Math.floor(point));
+  localStorage.setItem(KEY.t, Date.now());
+  localStorage.setItem(KEY.b, boostUntil);
+}, 5000);
+
+updateUI();
 </script>
 </body>
 </html>
