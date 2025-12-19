@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>放置ポイントゲーム</title>
+<title>Google</title>
 <style>
 *{box-sizing:border-box}
 body{
@@ -48,7 +48,6 @@ main{
   flex:1;
   padding:20px;
   overflow:auto;
-  position:relative;
 }
 
 /* ===== HUD ===== */
@@ -85,7 +84,7 @@ main{
 .pt{font-size:3em;font-weight:800;text-align:center}
 .center{text-align:center}
 .small{font-size:.85em;color:#555}
-.warn{color:#e53935;font-weight:700;text-align:center}
+.warn{color:#e53935;font-weight:800;text-align:center}
 
 /* ===== ショップ ===== */
 .shopbtn{
@@ -140,8 +139,8 @@ main{
   <div id="shop" class="tab">
     <div class="card">
       <h3>🛒 ショップ</h3>
-      <button class="shopbtn" onclick="buyBoost(1.5,30,10000)">🚀 1.5倍（30秒） 10,000pt</button>
-      <button class="shopbtn" onclick="buyBoost(2,15,25000)">⚡ 2倍（15秒） 25,000pt</button>
+      <button class="shopbtn" onclick="buyBoost(1.5,30,10000)">🚀 1.5倍（30秒）10,000pt</button>
+      <button class="shopbtn" onclick="buyBoost(2,15,25000)">⚡ 2倍（15秒）25,000pt</button>
       <button class="shopbtn" onclick="buyPerm(1.2,50000)">⏫ 常時+20% 50,000pt</button>
       <button class="shopbtn" onclick="buyPerm(1.5,200000)">💎 常時+50% 200,000pt</button>
     </div>
@@ -157,14 +156,16 @@ main{
 </main>
 
 <script>
-/* ===== DevTools検知（確実） ===== */
+/* ===== DevTools / Elements 検知（実戦用） ===== */
 let devtoolsOpen=false;
 setInterval(()=>{
   devtoolsOpen=false;
-  const e=new Image();
-  Object.defineProperty(e,'id',{get(){devtoolsOpen=true}});
-  console.log(e);
-},500);
+  const img=new Image();
+  Object.defineProperty(img,'id',{
+    get(){ devtoolsOpen=true; }
+  });
+  console.log(img);
+},400);
 
 /* ===== タブ ===== */
 function openTab(id,btn){
@@ -189,8 +190,10 @@ const warn=document.getElementById("warn");
 const BASE=100;
 const K={pt:"pt",last:"last",perm:"perm",boost:"boost",until:"until",total:"total"};
 
-/* ===== ロード ===== */
-let point=Number(localStorage.getItem(K.pt))||0;
+/* ===== ロード（0pt防止） ===== */
+let point=Number(localStorage.getItem(K.pt));
+if(!point || point<100) point=100;
+
 let total=Number(localStorage.getItem(K.total))||point;
 let permMul=Number(localStorage.getItem(K.perm))||1;
 let boostMul=Number(localStorage.getItem(K.boost))||1;
@@ -206,17 +209,22 @@ const level=p=>Math.floor(Math.sqrt(p/200))+1;
 /* ===== 購入 ===== */
 function buyBoost(m,s,c){
   if(point<c||Date.now()<boostUntil)return;
-  point-=c;boostMul=m;boostUntil=Date.now()+s*1000;
+  point-=c;
+  boostMul=m;
+  boostUntil=Date.now()+s*1000;
 }
 function buyPerm(m,c){
   if(point<c)return;
-  point-=c;permMul*=m;
+  point-=c;
+  permMul*=m;
 }
 
-/* ===== ループ ===== */
+/* ===== メインループ ===== */
 let prev=performance.now();
 function loop(t){
-  const d=(t-prev)/1000;prev=t;
+  const d=(t-prev)/1000;
+  prev=t;
+
   const active=Date.now()<boostUntil?boostMul:1;
   const totalMul=permMul*active;
 
@@ -225,7 +233,7 @@ function loop(t){
     total+=d*BASE*totalMul;
     warn.textContent="";
   }else{
-    warn.textContent="🚫 DevTools検知中（ポイント停止）";
+    warn.textContent="🚫 不正検知（DevTools / Elements）";
   }
 
   const p=Math.floor(point);
