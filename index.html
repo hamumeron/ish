@@ -63,16 +63,11 @@ main{
   box-shadow:0 6px 18px #0002;
   font-size:.85em;
   z-index:100;
-  animation:slide .4s ease;
-}
-@keyframes slide{
-  from{opacity:0;transform:translateY(-10px)}
-  to{opacity:1;transform:none}
 }
 .hud b{font-size:1.1em}
 
 /* ===== タブ ===== */
-.tab{display:none;animation:fade .35s ease}
+.tab{display:none;animation:fade .3s ease}
 .tab.active{display:block}
 @keyframes fade{
   from{opacity:0;transform:translateX(20px)}
@@ -89,7 +84,10 @@ main{
 }
 .pt{font-size:3em;font-weight:800;text-align:center}
 .center{text-align:center}
+.small{font-size:.85em;color:#555}
+.warn{color:#e53935;font-weight:700;text-align:center}
 
+/* ===== ショップ ===== */
 .shopbtn{
   width:100%;
   padding:14px;
@@ -98,24 +96,20 @@ main{
   border-radius:10px;
   background:#f1f3f9;
   cursor:pointer;
-  transition:.2s;
 }
-.shopbtn:hover{background:#e0e5ff;transform:scale(1.02)}
-.shopbtn:disabled{opacity:.4}
-
-.small{font-size:.85em;color:#555}
-.warn{color:#e53935;font-weight:700}
+.shopbtn:hover{background:#e0e5ff}
 </style>
 </head>
 <body>
 
-<!-- ===== HUD ===== -->
+<!-- HUD -->
 <div class="hud">
   💰 <b><span id="hudPt">0</span></b> pt<br>
   Lv.<span id="hudLv">1</span> /
   <span id="hudMul">1.00</span>x
 </div>
 
+<!-- サイドバー -->
 <aside>
   <button class="tabbtn active" onclick="openTab('home',this)">
     <span>🏠</span>ホーム
@@ -138,7 +132,7 @@ main{
         倍率 <span id="mul">1.00</span>x /
         ブースト <span id="boost">なし</span>
       </div>
-      <div id="warn" class="center warn"></div>
+      <div id="warn" class="warn"></div>
     </div>
   </div>
 
@@ -146,18 +140,10 @@ main{
   <div id="shop" class="tab">
     <div class="card">
       <h3>🛒 ショップ</h3>
-      <button class="shopbtn" onclick="buyBoost(1.5,30,10000)">
-        🚀 1.5倍（30秒）<br>10,000pt
-      </button>
-      <button class="shopbtn" onclick="buyBoost(2,15,25000)">
-        ⚡ 2倍（15秒）<br>25,000pt
-      </button>
-      <button class="shopbtn" onclick="buyPerm(1.2,50000)">
-        ⏫ 常時+20%<br>50,000pt
-      </button>
-      <button class="shopbtn" onclick="buyPerm(1.5,200000)">
-        💎 常時+50%<br>200,000pt
-      </button>
+      <button class="shopbtn" onclick="buyBoost(1.5,30,10000)">🚀 1.5倍（30秒） 10,000pt</button>
+      <button class="shopbtn" onclick="buyBoost(2,15,25000)">⚡ 2倍（15秒） 25,000pt</button>
+      <button class="shopbtn" onclick="buyPerm(1.2,50000)">⏫ 常時+20% 50,000pt</button>
+      <button class="shopbtn" onclick="buyPerm(1.5,200000)">💎 常時+50% 200,000pt</button>
     </div>
   </div>
 
@@ -171,16 +157,14 @@ main{
 </main>
 
 <script>
-/* ===== DevTools検知 ===== */
+/* ===== DevTools検知（確実） ===== */
 let devtoolsOpen=false;
-(() => {
-  const TH=160;
-  setInterval(()=>{
-    const w=window.outerWidth-window.innerWidth;
-    const h=window.outerHeight-window.innerHeight;
-    devtoolsOpen=(w>TH||h>TH);
-  },500);
-})();
+setInterval(()=>{
+  devtoolsOpen=false;
+  const e=new Image();
+  Object.defineProperty(e,'id',{get(){devtoolsOpen=true}});
+  console.log(e);
+},500);
 
 /* ===== タブ ===== */
 function openTab(id,btn){
@@ -191,27 +175,27 @@ function openTab(id,btn){
 }
 
 /* ===== DOM ===== */
-const ptEl=pt;
-const lvEl=lv;
-const mulEl=mul;
-const boostEl=boost;
+const ptEl=document.getElementById("pt");
+const lvEl=document.getElementById("lv");
+const mulEl=document.getElementById("mul");
+const boostEl=document.getElementById("boost");
 const achList=document.getElementById("achList");
-const hudPt=hudPt;
-const hudLv=hudLv;
-const hudMul=hudMul;
+const hudPt=document.getElementById("hudPt");
+const hudLv=document.getElementById("hudLv");
+const hudMul=document.getElementById("hudMul");
 const warn=document.getElementById("warn");
 
 /* ===== 定数 ===== */
 const BASE=100;
 const K={pt:"pt",last:"last",perm:"perm",boost:"boost",until:"until",total:"total"};
 
-/* ===== 読込 ===== */
-let point=+localStorage.getItem(K.pt)||0;
-let total=+localStorage.getItem(K.total)||point;
-let permMul=+localStorage.getItem(K.perm)||1;
-let boostMul=+localStorage.getItem(K.boost)||1;
-let boostUntil=+localStorage.getItem(K.until)||0;
-let last=+localStorage.getItem(K.last)||Date.now();
+/* ===== ロード ===== */
+let point=Number(localStorage.getItem(K.pt))||0;
+let total=Number(localStorage.getItem(K.total))||point;
+let permMul=Number(localStorage.getItem(K.perm))||1;
+let boostMul=Number(localStorage.getItem(K.boost))||1;
+let boostUntil=Number(localStorage.getItem(K.until))||0;
+let last=Number(localStorage.getItem(K.last))||Date.now();
 
 /* ===== オフライン加算 ===== */
 point+=Math.floor((Date.now()-last)/1000)*BASE;
@@ -237,11 +221,11 @@ function loop(t){
   const totalMul=permMul*active;
 
   if(!devtoolsOpen){
-    const inc=d*BASE*totalMul;
-    point+=inc; total+=inc;
+    point+=d*BASE*totalMul;
+    total+=d*BASE*totalMul;
     warn.textContent="";
   }else{
-    warn.textContent="🚫 DevTools検知中（加算停止）";
+    warn.textContent="🚫 DevTools検知中（ポイント停止）";
   }
 
   const p=Math.floor(point);
@@ -251,7 +235,7 @@ function loop(t){
   lvEl.textContent=lv;
   mulEl.textContent=permMul.toFixed(2);
   boostEl.textContent=active>1
-    ? active+"x ("+Math.ceil((boostUntil-Date.now())/1000)+"s)"
+    ? `${active}x (${Math.ceil((boostUntil-Date.now())/1000)}s)`
     : "なし";
 
   hudPt.textContent=p;
@@ -274,7 +258,7 @@ setInterval(()=>{
   localStorage.setItem(K.boost,boostMul);
   localStorage.setItem(K.until,boostUntil);
   localStorage.setItem(K.last,Date.now());
-},5000);
+},3000);
 </script>
 </body>
 </html>
